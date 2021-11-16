@@ -1,6 +1,7 @@
 package golang_offer_test
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -71,4 +72,32 @@ func TestSlice04(t *testing.T) {
 	my_slice[1] = 101
 	println(new_slice[1]) // 23
 
+}
+
+func TestSlice05(t *testing.T) {
+	s1 := []int{11, 22, 33}
+	s2 := make([]int, 5)
+	s3 := make([]int, 2)
+
+	println(s1, s2, s3)
+
+	num := copy(s2, s1)
+	copy(s3, s1)
+
+	fmt.Println(num) // 3
+	fmt.Println(s2)  // [11,22,33,0,0]
+	fmt.Println(s3)  // [11,22]
+
+	println(s1, s2, s3)
+}
+
+func TestSlice06(t *testing.T) {
+	my_slice := []int{11, 22, 33, 44, 55}
+	new_slice := my_slice[1:3]
+
+	// append()追加一个元素2323，返回新的slice
+	app_slice := append(new_slice, 2323)
+	t.Log(new_slice) // [22 33]
+	t.Log(app_slice) // [22 33 2323]
+	t.Log(my_slice)  // [11 22 33 2323 55]
 }

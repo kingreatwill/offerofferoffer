@@ -133,5 +133,98 @@ SLICE[:]   // 从头切到尾，等价于复制整个SLICE
 当同一个底层数组有很多slice的时候，一切将变得混乱不堪，因为我们不可能记住谁在共享它，通过修改某个slice的元素时，将也会影响那些可能我们不想影响的slice。所以，需要一种特性，保证各个slice的底层数组互不影响，相关内容见下面的"扩容"。
 
 ## copy()函数
+可以将一个slice拷贝到另一个slice中。`go doc builtin copy`
+```golang
+func copy(dst, src []Type) int
+```
+这表示将src slice拷贝到dst slice，src比dst长，就截断，src比dst短，则只拷贝src那部分。
+
+copy的返回值是拷贝成功的元素数量，所以也就是src slice或dst slice中最小的那个长度。
+
+此外，copy还能将字符串拷贝到byte slice中，因为字符串实际上就是[]byte。
+```golang
+s1 := []byte("Hello")
+num := copy(s1, "World")
+fmt.Println(num)
+fmt.Println(s1)    // 输出[87 111 114 108 100 32]
+fmt.Println(string(s1))  //输出"World"
+```
+
 ## append()函数
-https://www.cnblogs.com/f-ck-need-u/p/9854932.html
+可以使用append()函数对slice进行扩展，因为它追加元素到slice中，所以一定会增加slice的长度。
+
+但必须注意，append()的结果必须被使用。所谓被使用，可以将其输出、可以赋值给某个slice。如果将append()放在空上下文将会报错：append()已评估，但未使用。同时这也说明，append()返回一个新的slice，原始的slice会保留不变。
+
+```golang
+my_slice := []int{11,22,33,44,55}
+new_slice := my_slice[1:3]
+
+// append()追加一个元素2323，返回新的slice
+app_slice := append(new_slice,2323)
+```
+上面的append()在new_slice的后面增加了一个元素2323，所以`app_slice[2]=2323`。但因为这些slice共享同一个底层数组，所以2323也会反映到其它slice中。
+
+现在的数据结构图如下：
+
+![](img/slice_03.png)
+
+当然，如果append()的结果重新赋值给new_slice，则new_slice会增加长度。
+
+同样，由于string的本质是[]byte，所以string可以append到byte slice中：
+```golang
+s1 := []byte("Hello")
+s2 := append(s1, "World"...)
+fmt.Println(string(s2))   // 输出：HelloWorld
+```
+### 扩容
+当slice的length已经等于capacity的时候，再使用append()给slice追加元素，会自动扩展底层数组的长度。
+
+底层数组扩展时，会生成一个新的底层数组。所以旧底层数组仍然会被旧slice引用，新slice和旧slice不再共享同一个底层数组。
+
+```golang
+func main() {
+    my_slice := []int{11,22,33,44,55}
+    new_slice := append(my_slice,66)
+
+    my_slice[3] = 444   // 修改旧的底层数组
+
+    fmt.Println(my_slice)   // [11 22 33 444 55]
+    fmt.Println(new_slice)  // [11 22 33 44 55 66]
+
+    fmt.Println(len(my_slice),":",cap(my_slice))     // 5:5
+    fmt.Println(len(new_slice),":",cap(new_slice))   // 6:10
+}
+```
+
+从上面的结果上可以发现，底层数组被扩容为10，且是新的底层数组。
+
+实际上，**当底层数组需要扩容时，会按照当前底层数组长度的2倍进行扩容，并生成新数组。如果底层数组的长度超过1000时，将按照25%的比率扩容，也就是1000个元素时，将扩展为1250个，不过这个增长比率的算法可能会随着go版本的递进而改变**。
+
+实际上，上面的说法应该改一改：当capacity需要扩容时，会按照当前capacity的2倍对数组进行扩容。或者说，是按照slice的本质`[x/y]0xADDR`的容量y来判断如何扩容的。之所以要特别强调这两种不同，是因为很容易搞混。
+
+
+例如，扩容的对象是底层数组的**真子集**时：
+```golang
+my_slice := []int{11,22,33,44,55}
+
+// 限定长度和容量，且让长度和容量相等
+new_slice := my_slice[1:3:3]   // [22 33]
+
+// 扩容
+app_slice := append(new_slice,4444)
+```
+上面的new_slice的容量为2，并没有对应到底层数组的最结尾，所以new_slice是my_slice的一个真子集。这时对new_slice扩容，将生成一个新的底层数组，新的底层数组容量为4，而不是10。如下图：
+![](img/slice_04.png)
+因为创建了新的底层数组，所以修改不同的slice，将不会互相影响。为了保证每次都是修改各自的底层数组，通常会切出仅一个长度、仅一个容量的新slice，这样只要对它进行任何一次扩容，就会生成一个新的底层数组，从而让每个slice的底层数组都独立。
+
+```golang
+my_slice := []int{11,22,33,44,55}
+
+new_slice := my_slice[2:3:3]
+app_slice := append(new_slice,3333)
+```
+事实上，这还是会出现共享的几率，因为没有扩容时，那个唯一的元素仍然是共享的，修改它肯定会影响至少1个slice，只有切出长度为0，容量为0的slice，才能完全保证独立性，但这和新创建一个slice没有区别。
+
+
+## 参考
+[Go基础系列：Go slice详解](https://www.cnblogs.com/f-ck-need-u/p/9854932.html)
