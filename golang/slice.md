@@ -52,6 +52,40 @@ slice := make([]int,5)
 // length=3,capacity=5的slice
 slice := make([]int,3,5)
 ```
+make只能构建slice、map和channel这3种结构的数据对象，因为它们都指向底层数据结构，都需要先为底层数据结构分配好内存并初始化。
+- new():
+```golang
+my_slice := new([]int)
+fmt.Println(my_slice) // &[]
+```
+make()比new()函数多一些操作，new()函数只会进行内存分配并做默认的赋0初始化，而make()可以先为底层数组分配好内存，然后从这个底层数组中再额外生成一个slice并初始化。
 
 
+- 直接赋值初始化：
+```golang
+// 创建长度和容量都为4的slice，并初始化赋值
+color_slice := []string{"red","blue","black","green"}
+// 创建长度和容量为100的slice，并为第100个元素赋值为3
+slice := []int{99:3}
+```
+注意区分array和slice：
+```golang
+// 创建长度为3的int数组
+array := [3]int{10, 20, 30}
+// 创建长度和容量都为3的slice
+slice := []int{10, 20, 30}
+```
+由于slice底层是数组，所以可以使用索引的方式访问slice，或修改slice中元素的值：
+```golang
+// 创建长度为5、容量为5的slice
+my_slice := []int{11,22,33,44,55}
+// 访问slice的第2个元素
+print(my_slice[1])
+// 修改slice的第3个元素的值
+my_slice[2] = 333
+```
+lice能被访问的元素只有length范围内的元素，那些在length之外，但在capacity之内的元素暂时还不属于slice，只有在slice被扩展时(见下文append)，capacity中的元素才被纳入length，才能被访问。
+
+
+## nil slice和空slice
 https://www.cnblogs.com/f-ck-need-u/p/9854932.html
