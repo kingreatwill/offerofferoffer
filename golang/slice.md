@@ -88,4 +88,50 @@ lice能被访问的元素只有length范围内的元素，那些在length之外�
 
 
 ## nil slice和空slice
+当声明一个slice，但不做初始化的时候，这个slice就是一个nil slice。
+```golang
+// 声明一个nil slice
+var nil_slice []int
+println(nil_slice)// [0/0]0x0
+```
+nil slice表示它的指针为nil，也就是这个slice不会指向哪个底层数组。也因此，nil slice的长度和容量都为0。但是循环不会报错。
+
+还可以创建空slice(Empty Slice)，空slice表示长度为0，容量为0，但却有指向的slice，只不过指向的底层数组暂时是长度为0的空数组。
+
+```golang
+// 使用make创建
+empty_slice := make([]int,0)
+// 直接创建
+empty_slice := []int{}
+println(empty_slice) // [0/0]0xc000049f48
+```
+虽然nil slice和Empty slice的长度和容量都为0，输出时的结果都是[]，且都不存储任何数据，但它们是不同的。nil slice不会指向底层数组，而空slice会指向底层数组，只不过这个底层数组暂时是空数组。
+
+当然，无论是nil slice还是empty slice，都可以对它们进行操作，如append()函数、len()函数和cap()函数。
+
+
+## 对slice进行切片
+语法为：
+```
+SLICE[A:B]
+SLICE[A:B:C]
+```
+其中A表示从SLICE的第几(A+1)个元素开始切，B控制切片的长度(B-A)，C控制切片的容量(C-A)，如果没有给定C，则表示切到底层数组的最尾部。
+
+还有几种简化形式：
+```
+SLICE[A:]  // 从A切到最尾部
+SLICE[:B]  // 从最开头切到B(不包含B)
+SLICE[:]   // 从头切到尾，等价于复制整个SLICE
+```
+![](img/slice_02.png)
+
+这时新slice的length等于capacity，底层数组的index=4、5将对new_slice永不可见，即使后面对new_slice进行append()导致底层数组扩容也仍然不可见。具体见下文。
+
+由于多个slice共享同一个底层数组，所以当修改了某个slice中的元素时，其它包含该元素的slice也会随之改变，因为slice只是一个指向底层数组的指针(只不过这个指针不纯粹，多了两个额外的属性length和capacity)，实际上修改的是底层数组的值，而底层数组是被共享的。
+
+当同一个底层数组有很多slice的时候，一切将变得混乱不堪，因为我们不可能记住谁在共享它，通过修改某个slice的元素时，将也会影响那些可能我们不想影响的slice。所以，需要一种特性，保证各个slice的底层数组互不影响，相关内容见下面的"扩容"。
+
+## copy()函数
+## append()函数
 https://www.cnblogs.com/f-ck-need-u/p/9854932.html
