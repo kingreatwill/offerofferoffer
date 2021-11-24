@@ -1,6 +1,6 @@
 
 # TCP/IP
-
+https://blog.csdn.net/weixin_53186633/article/details/120514627
 ## KEEPALIVE
 
 在双方长时间未通讯时，如何得知对方还活着？如何得知这个TCP连接是健康且具有通讯能力的？
