@@ -1,3 +1,6 @@
+# MYSQL
+[权威文档](https://dev.mysql.com/doc/refman/8.0/en/)
+
 ## ACID
 1. 原子性（Atomicity）
 事务包含的所有数据库操作要么全部成功，要不全部失败回滚。
@@ -60,3 +63,24 @@ spring在TransactionDefinition接口中定义了七个事务传播行为：
 
 ## TSQL JOIN Types
 [pdf](../files/TsqlJoinTypesPoster21_5.pdf)
+
+## EXPLAIN
+
+EXPLAIN SQL 默认为 EXPLAIN FORMAT=TRADITIONAL
+EXPLAIN FORMAT=JSON/TREE/TRADITIONAL
+EXPLAIN FORMAT=TREE是8.0.20新增的
+EXPLAIN ANALYZE
+EXPLAIN | DESCRIBE | DESC 三者相同
+### 字段解释
+[【整理】explain、type、extra用法和结果的含义](https://www.cnblogs.com/miskis/p/9081187.html)
+
+https://dev.mysql.com/doc/refman/8.0/en/explain-output.html
+
+#### key_len
+
+[Explain之key_len长度计算](https://www.cnblogs.com/xuanzhi201111/p/4554769.html)
+
+https://stackoverflow.com/questions/7643491/understanding-mysql-key-len-in-explain-statement 还有一个作用就是计算组合索引使用到了几个列
+
+## LOCK
+https://dev.mysql.com/doc/refman/8.0/en/innodb-locking.html
